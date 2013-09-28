@@ -8,6 +8,8 @@
 
 package jvn;
 
+import java.rmi.Naming;
+import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.io.*;
@@ -26,6 +28,8 @@ public class JvnServerImpl
 	private static JvnServerImpl js = null;
 	// HashMap contenant les objet locaux 
 	private HashMap<Object, String> jvnLocalTable ;
+	//Réference vers le coordinateur
+	private JvnRemoteCoord coordinator;
 
   /**
   * Default constructor
@@ -35,6 +39,13 @@ public class JvnServerImpl
 		super();
 		// to be completed
 		jvnLocalTable = new HashMap<Object, String>();
+		try{
+			//recupere la reference du coordinateur
+			coordinator = (JvnRemoteCoord)Naming.lookup("rmi://" + "localhost" + "/" +"coord");
+		}
+		catch (RemoteException e){
+			e.printStackTrace();
+		}
 	}
 	
   /**
@@ -59,7 +70,7 @@ public class JvnServerImpl
 	**/
 	public  void jvnTerminate()
 	throws jvn.JvnException {
-		js = null;
+		//to be completed
 		
 	} 
 	
@@ -70,8 +81,12 @@ public class JvnServerImpl
 	**/
 	public  JvnObject jvnCreateObject(Serializable o)
 	throws jvn.JvnException { 
-		if (o !=null)
-			return (JvnObject) o;
+		if (o !=null){
+			JvnObjectImpl jvnObj = new JvnObjectImpl();
+			jvnObj.setlock("RW");
+			jvnObj.setObjet(o);
+			return jvnObj;
+		}
 		return null; 
 	}
 	
@@ -84,6 +99,16 @@ public class JvnServerImpl
 	public  void jvnRegisterObject(String jon, JvnObject jo)
 	throws jvn.JvnException {
 		// to be completed 
+		if (!jvnLocalTable.containsKey(jo)){
+			jvnLocalTable.put(jo, jon);
+			try{
+				coordinator.jvnRegisterObject(jon, jo, this);
+			}
+			catch(RemoteException e){
+				e.printStackTrace();
+			}
+			
+		}
 	}
 	
 	/**
@@ -95,6 +120,12 @@ public class JvnServerImpl
 	public  JvnObject jvnLookupObject(String jon)
 	throws jvn.JvnException {
     // to be completed 
+		try{
+			return coordinator.jvnLookupObject(jon, this);
+		}
+		catch (RemoteException e){
+			e.printStackTrace();
+		}
 		return null;
 	}	
 	
@@ -111,7 +142,7 @@ public class JvnServerImpl
 
 	}	
 	/**
-	* Get a Write lock on a JVN object 
+	* Get a Write lock on a JVN object
 	* @param joi : the JVN object identification
 	* @return the current JVN object state
 	* @throws  JvnException
