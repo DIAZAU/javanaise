@@ -76,4 +76,17 @@ public interface JvnObject extends Serializable {
 	**/
    public Serializable jvnInvalidateWriterForReader()
 	 throws jvn.JvnException;	
+   
+   public int getId() ;
+   
+	public void setId(int id) ;
+	
+	public Object getObjet() ;
+	
+	public void setObjet(Object objet) ;
+	
+	public String getlock();
+	
+	public void setlock(String lock);
+	
 }
