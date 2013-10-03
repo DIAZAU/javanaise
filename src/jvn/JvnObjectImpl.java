@@ -15,7 +15,7 @@ public class JvnObjectImpl implements JvnObject {
 	//l'identicateur unique
 	private int id;
 	
-	//l'id du serveur local
+	//l'indicateur du serveur local
 	private JvnLocalServer jvnServ;
 	
 	public int getId() {
@@ -71,6 +71,7 @@ public class JvnObjectImpl implements JvnObject {
 		return null;
 	}
 
+	// Invalidate Reader
 	@Override
 	public void jvnInvalidateReader() throws JvnException {
 		// TODO Auto-generated method stub
@@ -91,6 +92,7 @@ public class JvnObjectImpl implements JvnObject {
 		return;
 	}
 
+	// Invalidate Writer
 	@Override
 	public Serializable jvnInvalidateWriter() throws JvnException {
 		// TODO Auto-generated method stub
@@ -111,6 +113,7 @@ public class JvnObjectImpl implements JvnObject {
 		return null;
 	}
 
+	// Invalidate Writer 4 Reader
 	@Override
 	public Serializable jvnInvalidateWriterForReader() throws JvnException {
 		// TODO Auto-generated method stub
