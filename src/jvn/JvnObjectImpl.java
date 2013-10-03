@@ -74,6 +74,10 @@ public class JvnObjectImpl implements JvnObject {
 	@Override
 	public Serializable jvnInvalidateWriter() throws JvnException {
 		// TODO Auto-generated method stub
+		// si le verrou courant est W
+		// wait
+		// si le verrou est WC
+		// verrou = NL //notify dans unlock
 		return null;
 	}
 

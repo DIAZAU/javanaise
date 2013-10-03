@@ -27,7 +27,7 @@ public class JvnServerImpl
 	// A JVN server is managed as a singleton 
 	private static JvnServerImpl js = null;
 	// HashMap contenant les objet locaux 
-	private HashMap<Object, String> jvnLocalTable ;
+	private HashMap<Integer, JvnObject> jvnLocalTable ;
 	//Réference vers le coordinateur
 	private JvnRemoteCoord coordinator;
 
@@ -37,8 +37,7 @@ public class JvnServerImpl
   **/
 	private JvnServerImpl() throws Exception {
 		super();
-		// to be completed
-		jvnLocalTable = new HashMap<Object, String>();
+		jvnLocalTable = new HashMap<Integer, JvnObject>();
 		try{
 			//recupere la reference du coordinateur
 			coordinator = (JvnRemoteCoord)Naming.lookup("rmi://" + "localhost" + "/" +"coord");
@@ -98,11 +97,10 @@ public class JvnServerImpl
 	**/
 	public  void jvnRegisterObject(String jon, JvnObject jo)
 	throws jvn.JvnException {
-		// to be completed 
 		if (!jvnLocalTable.containsKey(jo)){
-			jvnLocalTable.put(jo, jon);
 			try{
 				coordinator.jvnRegisterObject(jon, jo, this);
+				jvnLocalTable.put(coordinator.jvnGetObjectId(), jo);
 			}
 			catch(RemoteException e){
 				e.printStackTrace();
@@ -119,7 +117,6 @@ public class JvnServerImpl
 	**/
 	public  JvnObject jvnLookupObject(String jon)
 	throws jvn.JvnException {
-    // to be completed 
 		try{
 			return coordinator.jvnLookupObject(jon, this);
 		}
@@ -137,9 +134,13 @@ public class JvnServerImpl
 	**/
    public Serializable jvnLockRead(int joi)
 	 throws JvnException {
-		// to be completed 
-		return null;
-
+	   try{
+		   return coordinator.jvnLockRead(joi, this);
+	   }
+	   catch (RemoteException e){
+		   e.printStackTrace();
+	   }
+	   return null;
 	}	
 	/**
 	* Get a Write lock on a JVN object
@@ -149,7 +150,12 @@ public class JvnServerImpl
 	**/
    public Serializable jvnLockWrite(int joi)
 	 throws JvnException {
-		// to be completed 
+		try{
+			return coordinator.jvnLockWrite(joi, this);
+		}
+		catch (RemoteException e){
+			e.printStackTrace();
+		}
 		return null;
 	}	
 
@@ -163,7 +169,7 @@ public class JvnServerImpl
 	**/
   public void jvnInvalidateReader(int joi)
 	throws java.rmi.RemoteException,jvn.JvnException {
-		// to be completed 
+		jvnLocalTable.get(joi).jvnInvalidateReader();
 	};
 	    
 	/**
@@ -174,8 +180,7 @@ public class JvnServerImpl
 	**/
   public Serializable jvnInvalidateWriter(int joi)
 	throws java.rmi.RemoteException,jvn.JvnException { 
-		// to be completed 
-		return null;
+		return jvnLocalTable.get(joi).jvnInvalidateWriter();
 	};
 	
 	/**
@@ -186,10 +191,8 @@ public class JvnServerImpl
 	**/
    public Serializable jvnInvalidateWriterForReader(int joi)
 	 throws java.rmi.RemoteException,jvn.JvnException { 
-		// to be completed 
-		return null;
+		return jvnLocalTable.get(joi).jvnInvalidateWriterForReader();
 	 };
-
 }
 
  

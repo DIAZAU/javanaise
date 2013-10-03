@@ -9,6 +9,11 @@
 package jvn;
 
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.io.Serializable;
 
 
@@ -21,13 +26,29 @@ public class JvnCoordImpl
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	//table d'objet partagé
+	private HashMap<Integer, JvnObject> jvnTableJvnObjet;
+	//Liste des objets avec leurs noms
+	private ArrayList<Register> jvnRegister;
+	//Liste des objet avec leurs verrous
+	private ArrayList<Verrou> jvnListVerrou;
+	//identifiant des objet JVN
+	private int jvnIdentifiant;
+	//condition pour l'exclusion mutuelle
+	private final Lock jvnLock = new ReentrantLock();
+	
 
 /**
   * Default constructor
   * @throws JvnException
   **/
 	private JvnCoordImpl() throws Exception {
-		// to be completed
+		jvnIdentifiant = 0;
+		jvnTableJvnObjet = new HashMap<Integer, JvnObject>();
+		jvnRegister = new ArrayList<Register>();
+		jvnListVerrou = new ArrayList<Verrou>(); 
+		jvnTableJvnObjet = new HashMap<Integer, JvnObject>();
+		
 	}
 
   /**
@@ -35,10 +56,9 @@ public class JvnCoordImpl
   *  newly created JVN object)
   * @throws java.rmi.RemoteException,JvnException
   **/
-  public int jvnGetObjectId()
+  synchronized public int jvnGetObjectId()
   throws java.rmi.RemoteException,jvn.JvnException {
-    // to be completed 
-    return 0;
+		return jvnIdentifiant; 
   }
   
   /**
@@ -49,9 +69,13 @@ public class JvnCoordImpl
   * @param js  : the remote reference of the JVNServer
   * @throws java.rmi.RemoteException,JvnException
   **/
-  public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js)
+  synchronized public void jvnRegisterObject(String jon, JvnObject jo, JvnRemoteServer js)
   throws java.rmi.RemoteException,jvn.JvnException{
-    // to be completed 
+    Register jvnRegis = new Register(jon, jo, js);
+    jvnRegister.add(jvnRegis);
+    Verrou verrou = new Verrou(jo.getlock(), js);
+    jvnListVerrou.add(verrou);
+    jvnTableJvnObjet.put(jvnIdentifiant++, jo);
   }
   
   /**
@@ -60,9 +84,12 @@ public class JvnCoordImpl
   * @param js : the remote reference of the JVNServer
   * @throws java.rmi.RemoteException,JvnException
   **/
-  public JvnObject jvnLookupObject(String jon, JvnRemoteServer js)
+  synchronized public JvnObject jvnLookupObject(String jon, JvnRemoteServer js)
   throws java.rmi.RemoteException,jvn.JvnException{
-    // to be completed 
+    for(Register r:jvnRegister){
+    	if (jon.compareTo(r.getJvnName())==0)
+    		return r.getJvnObj();
+    }
     return null;
   }
   
@@ -73,9 +100,9 @@ public class JvnCoordImpl
   * @return the current JVN object state
   * @throws java.rmi.RemoteException, JvnException
   **/
-   public Serializable jvnLockRead(int joi, JvnRemoteServer js)
+  synchronized public Serializable jvnLockRead(int joi, JvnRemoteServer js)
    throws java.rmi.RemoteException, JvnException{
-    // to be completed
+    JvnObject jo = jvnTableJvnObjet.get(joi);
     return null;
    }
 
@@ -86,7 +113,7 @@ public class JvnCoordImpl
   * @return the current JVN object state
   * @throws java.rmi.RemoteException, JvnException
   **/
-   public Serializable jvnLockWrite(int joi, JvnRemoteServer js)
+  synchronized public Serializable jvnLockWrite(int joi, JvnRemoteServer js)
    throws java.rmi.RemoteException, JvnException{
     // to be completed
     return null;
@@ -97,7 +124,7 @@ public class JvnCoordImpl
 	* @param js  : the remote reference of the server
 	* @throws java.rmi.RemoteException, JvnException
 	**/
-    public void jvnTerminate(JvnRemoteServer js)
+  synchronized public void jvnTerminate(JvnRemoteServer js)
 	 throws java.rmi.RemoteException, JvnException {
 	 // to be completed
     }
