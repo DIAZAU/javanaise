@@ -15,6 +15,9 @@ public class JvnObjectImpl implements JvnObject {
 	//l'identicateur unique
 	private int id;
 	
+	//l'id du serveur local
+	private JvnLocalServer jvnServ;
+	
 	public int getId() {
 		return id;
 	}
@@ -39,17 +42,20 @@ public class JvnObjectImpl implements JvnObject {
 	@Override
 	public void jvnLockRead() throws JvnException {
 		// TODO Auto-generated method stub
+			jvnServ.jvnLockRead(id);			
 	}
 
 	@Override
 	public void jvnLockWrite() throws JvnException {
 		// TODO Auto-generated method stub
-
+			jvnServ.jvnLockWrite(id);
+		
 	}
 
 	@Override
 	public void jvnUnLock() throws JvnException {
 		// TODO Auto-generated method stub
+		notify();
 
 	}
 
@@ -68,18 +74,60 @@ public class JvnObjectImpl implements JvnObject {
 	@Override
 	public void jvnInvalidateReader() throws JvnException {
 		// TODO Auto-generated method stub
-
+		if (lock.compareTo("R")==0)
+		{
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else if (lock.compareTo("RC")==0) {
+			lock="NL";
+			return;
+		}
+		lock="NL";
+		return;
 	}
 
 	@Override
 	public Serializable jvnInvalidateWriter() throws JvnException {
 		// TODO Auto-generated method stub
+		if (lock.compareTo("W")==0)
+		{
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else if (lock.compareTo("WC")==0) {
+			lock="NL";
+			return this;
+		}
+		lock="NL";
 		return null;
 	}
 
 	@Override
 	public Serializable jvnInvalidateWriterForReader() throws JvnException {
 		// TODO Auto-generated method stub
+		if (lock.compareTo("RWC")==0)
+		{
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else if (lock.compareTo("WC")==0) {
+			lock="NL";
+			return this;
+		}
+		lock="NL";
 		return null;
 	}
 
